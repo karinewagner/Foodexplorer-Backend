@@ -4,7 +4,7 @@ const createUsers = `
     name VARCHAR,
     email VARCHAR,
     password VARCHAR,
-    admin BIT NOT NULL,
+    admin BIT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )

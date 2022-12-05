@@ -1,4 +1,4 @@
-const { Router, request } = require("express")
+const { Router } = require("express")
 const multer = require("multer")
 const uploadConfig = require("../configs/upload")
 
@@ -16,6 +16,6 @@ dishesRoutes.post("/", dishesController.create)
 dishesRoutes.get("/", dishesController.index)
 dishesRoutes.get("/:id", dishesController.show)
 dishesRoutes.delete("/:id", dishesController.delete)
-dishesRoutes.patch("/image", upload.single("image"), dishesController.update)
+dishesRoutes.patch("/image/:id", upload.single("image"), dishesController.update)
 
 module.exports = dishesRoutes

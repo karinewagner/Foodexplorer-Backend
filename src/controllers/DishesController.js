@@ -5,24 +5,30 @@ const DiskStorage = require("../providers/DiskStorage")
 class DishesController{
   async create(request, response) {
     const { title, description, ingredients, value } = request.body
-    const { filename: imageFilename } = request.file
-    const user_id = request.user.id
+    //const { filename: imgFilename } = request.file
 
     const diskStorage = new DiskStorage()
+    //const filename = await diskStorage.saveFile(imgFilename)
+
+    console.log(title, description, ingredients, value)
+    //console.log(filename);
+
+        if (dish.image) {
+      await diskStorage.deleteFile(dish.image)
+    }
+
     const filename = await diskStorage.saveFile(imageFilename)
 
     const dish_id = await knex("dishes").insert({
-      image: filename,
+      //img: filename,
       title, 
       description,
       value, 
-      user_id
     })
 
     const ingredientsInsert = ingredients.map(name => {
       return {
         name,
-        user_id,
         dish_id
       }
     })
@@ -99,18 +105,17 @@ class DishesController{
 
   async update(request, response) {
     const { title, description, ingredients, value } = request.body
-    const { id } = request.params
-    //const user_id = request.user.id
-    const { filename: imageFilename} = request.file
-    //const imageFilename = request.file.filename
+    const user_id = request.user.id
+
+    const imageFilename = request.file.filename
 
     const diskStorage = new DiskStorage()
 
-    //const dish = await knex("dishes").where({ id: user_id }).first()
-    const dish = await knex("dishes").where({ id }).first()
+    const dish = await knex("dishes").where({ id: user_id }).first()
+    console.log(dish)
 
-    //if (!dish) {
-     // throw new AppError("Somente administradores podem mudar a foto do prato!", 401)    }
+    if (!dish) {
+      throw new AppError("Somente administradores podem mudar a foto do prato!", 401)    }
 
     if (dish.image) {
       await diskStorage.deleteFile(dish.image)
@@ -118,23 +123,13 @@ class DishesController{
 
     const filename = await diskStorage.saveFile(imageFilename)
     
-    dish.image = filename
+    dish.image = filename ?? dish.image
     dish.title = title ?? dish.title
     dish.description = description ?? dish.description
     dish.ingredients = ingredients ?? dish.ingredients
     dish.value = value ?? dish.value
 
-    const ingredientsInsert = ingredients.map(name => {
-      return {
-        name,
-        user_id,
-        dish_id
-      }
-    })
-
-    await knex("ingredients").insert(ingredientsInsert)
-    await knex("dishes").update(dish).where({ id })
-    //await knex("dishes").update(dish).where({ id: user_id })
+    await knex("dishes").update(dish).where({ id: user_id })
 
     return response.json()
   }

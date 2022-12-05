@@ -26,7 +26,6 @@ class SessionsControllers {
       throw new AppError("E-mail e/ou senha incorreta!", 401)
     }
 
-
     return response.json({ user, token })
   }
 }
