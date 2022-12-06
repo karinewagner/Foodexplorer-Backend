@@ -1,37 +1,27 @@
 const knex = require("../database/knex")
-const AppError = require("../utils/AppError")
 const DiskStorage = require("../providers/DiskStorage")
 
 class DishesController{
   async create(request, response) {
     const { title, description, ingredients, value } = request.body
-    //const { filename: imgFilename } = request.file
-
+    const { filename: imageFilename } = request.file
+    const user_id = request.user.id
+     
     const diskStorage = new DiskStorage()
-    //const filename = await diskStorage.saveFile(imgFilename)
-
-    console.log(title, description, ingredients, value)
-    //console.log(filename);
-
-        if (dish.image) {
-      await diskStorage.deleteFile(dish.image)
-    }
-
     const filename = await diskStorage.saveFile(imageFilename)
-
+    
     const dish_id = await knex("dishes").insert({
-      //img: filename,
+      image: filename,
       title, 
       description,
-      value, 
+      value,
+      user_id
     })
 
-    const ingredientsInsert = ingredients.map(name => {
-      return {
+    const ingredientsInsert = ingredients.map((name) => ({
         name,
-        dish_id
-      }
-    })
+        dish_id,
+    }))
 
     await knex("ingredients").insert(ingredientsInsert)
 
@@ -61,7 +51,6 @@ class DishesController{
 
   async index(request, response) {
     const { title, ingredients } = request.query
-    const user_id = request.user.id
 
     let dishes
 
@@ -75,9 +64,7 @@ class DishesController{
           "dishes.title",
           "dishes.description",
           "dishes.value",
-          "dishes.user_id"
         ])
-        .where("dishes.user_id", user_id)
         .whereLike("dishes.title", `%${title}%`)
         .whereIn("name", filterIngredients)
         .innerJoin("dishes", "dishes.id", "ingredients.dish_id")
@@ -85,12 +72,11 @@ class DishesController{
 
     } else {
       dishes = await knex("dishes")
-        .where({ user_id })
         .whereLike("title", `%${title}%`)
         .orderBy("title")
     }
 
-    const userIngredient = await knex("ingredients").where({ user_id })
+    const userIngredient = await knex("ingredients")
     const dishesWithIngredient = dishes.map(dish => {
       const dishIngredient = userIngredient.filter( ingredient => ingredient.dish_id === dish.id)
 
@@ -105,31 +91,28 @@ class DishesController{
 
   async update(request, response) {
     const { title, description, ingredients, value } = request.body
-    const user_id = request.user.id
-
-    const imageFilename = request.file.filename
+    const { filename: imageFilename,  } = request.file
+    const { id } = request.params;
 
     const diskStorage = new DiskStorage()
 
-    const dish = await knex("dishes").where({ id: user_id }).first()
-    console.log(dish)
-
-    if (!dish) {
-      throw new AppError("Somente administradores podem mudar a foto do prato!", 401)    }
-
-    if (dish.image) {
-      await diskStorage.deleteFile(dish.image)
-    }
+    const dish = await knex("dishes").where({ id }).first()
 
     const filename = await diskStorage.saveFile(imageFilename)
     
     dish.image = filename ?? dish.image
     dish.title = title ?? dish.title
     dish.description = description ?? dish.description
-    dish.ingredients = ingredients ?? dish.ingredients
     dish.value = value ?? dish.value
+    
+    const ingredientsInsert = ingredients.map((name) => ({
+        name,
+        dish_id: dish.id,
+    }))
 
-    await knex("dishes").update(dish).where({ id: user_id })
+    await knex("dishes").where({id}).update(dish)
+    await knex("ingredients").where({dish_id: id}).delete()
+    await knex("ingredients").insert(ingredientsInsert)
 
     return response.json()
   }
