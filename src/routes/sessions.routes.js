@@ -1,11 +1,11 @@
 const { Router } = require("express")
 
-const SessionsControllers = require("../controllers/SessionsControllers")
-
-const sessionsControllers = new SessionsControllers
-
 const sessionsRoutes = Router()
 
-sessionsRoutes.post("/", sessionsControllers.create)
+const SessionsController = require("../controllers/SessionsController")
+
+const sessionsController = new SessionsController()
+
+sessionsRoutes.post("/", sessionsController.create)
 
 module.exports = sessionsRoutes

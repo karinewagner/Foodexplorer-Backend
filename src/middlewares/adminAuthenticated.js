@@ -1,11 +1,17 @@
+const knex = require("../database/knex")
+const AppError = require("../utils/AppError")
 
+async function adminAuthenticated(request, response, next) {
 
-function adminAuthenticated(request, response, next) {
-  if (!request.body.isAdmin) {
-    return response.json({ message: "User unauthorized"})
+  const { id } = request.user
+  const user = await knex("users").where({ id })
+  const isAdmin = user[0].is_Admin
+
+  if (!isAdmin) {
+    throw new AppError("User unauthorized", 401)
   }
 
-  next()
-}
+  return next()
+} 
 
 module.exports = adminAuthenticated

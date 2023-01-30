@@ -18,13 +18,13 @@ class SessionsControllers {
       expiresIn
     })
 
-    if (!user) {
+    if (!user || !passwordMatched) {
       throw new AppError("E-mail e/ou senha incorreta!", 401)
     }
 
-    if (!passwordMatched) {
-      throw new AppError("E-mail e/ou senha incorreta!", 401)
-    }
+    //if (!passwordMatched) {
+    //  throw new AppError("E-mail e/ou senha incorreta!", 401)
+    //}
 
     return response.json({ user, token })
   }

@@ -2,20 +2,22 @@ const { Router } = require("express")
 const multer = require("multer")
 const uploadConfig = require("../configs/upload")
 
-const DishesController = require("../controllers/DishesController")
-const ensureAuthenticated = require("../middlewares/ensureAuthenticated")
+const upload = multer(uploadConfig.MULTER)
 
 const dishesRoutes = Router()
-const upload = multer(uploadConfig.MULTER)
+
+const ensureAuthenticated = require("../middlewares/ensureAuthenticated")
+const adminAuthenticated = require("../middlewares/adminAuthenticated")
+const DishesController = require("../controllers/DishesController")
 
 const dishesController = new DishesController()
 
 dishesRoutes.use(ensureAuthenticated)
 
-dishesRoutes.post("/:id", upload.single("image"), dishesController.create)
+dishesRoutes.post("/", adminAuthenticated, upload.single("img"), dishesController.create)
 dishesRoutes.get("/", dishesController.index)
 dishesRoutes.get("/:id", dishesController.show)
-dishesRoutes.delete("/:id", dishesController.delete)
-dishesRoutes.patch("/image/:id", upload.single("image"), dishesController.update)
+dishesRoutes.delete("/:id", adminAuthenticated, dishesController.delete)
+dishesRoutes.patch("/:id", adminAuthenticated, upload.single("img"), dishesController.update)
 
 module.exports = dishesRoutes
