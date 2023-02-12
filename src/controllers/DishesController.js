@@ -3,7 +3,7 @@ const DiskStorage = require("../providers/DiskStorage")
 
 class DishesController{
   async create(request, response) {
-    const { title, description, ingredients, price } = request.body
+    const { title, category, description, price, ingredients } = request.body
     const { filename: imgFilename } = request.file
     
     const diskStorage = new DiskStorage()
@@ -13,6 +13,7 @@ class DishesController{
       img: filename,
       title, 
       description,
+      category,
       price,
     })
 
@@ -89,7 +90,7 @@ class DishesController{
   }
 
   async update(request, response) {
-    const { title, description, ingredients, price } = request.body
+    const { title, category, description, ingredients, price } = request.body
     const { filename: imgFilename } = request.file
     const { id } = request.params;
 
@@ -105,6 +106,7 @@ class DishesController{
     dish.img = filename ?? dish.img
     dish.title = title ?? dish.title
     dish.description = description ?? dish.description
+    dish.category = category ?? dish.category
     dish.price = price ?? dish.price
 
     const ingredientsInsert = ingredients.map(name => ({
