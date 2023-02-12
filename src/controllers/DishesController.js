@@ -4,8 +4,8 @@ const DiskStorage = require("../providers/DiskStorage")
 class DishesController{
   async create(request, response) {
     const { title, description, ingredients, price } = request.body
-    const { filename: imgFilename } = request.files
-     
+    const { filename: imgFilename } = request.file
+    
     const diskStorage = new DiskStorage()
     const filename = await diskStorage.saveFile(imgFilename)
     
@@ -94,27 +94,26 @@ class DishesController{
     const { id } = request.params;
 
     const diskStorage = new DiskStorage()
+    const filename = await diskStorage.saveFile(imgFilename)
 
     const dish = await knex("dishes").where({ id }).first()
 
     if(dish.img) {
       await diskStorage.deleteFile(dish.img)
     }
-
-    const filename = await diskStorage.saveFile(imgFilename)
     
-    dish.img = filename
+    dish.img = filename ?? dish.img
     dish.title = title ?? dish.title
     dish.description = description ?? dish.description
     dish.price = price ?? dish.price
-    
+
     const ingredientsInsert = ingredients.map(name => ({
         name,
         dishes_id: dish.id,
     }))
 
     await knex("dishes").where({id}).update(dish)
-    await knex("ingredients").where({dish_id: id}).delete()
+    await knex("ingredients").where({dishes_id: id}).delete()
     await knex("ingredients").insert(ingredientsInsert)
 
     return response.json()
